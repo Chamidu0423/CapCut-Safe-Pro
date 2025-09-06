@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CapCut MotionBlurCache Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background: #1c1c1e;
+            color: #f2f2f7;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 9px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
+
+        .glass-backdrop {
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(20px) saturate(180%);
+        }
+        
+        .modal-enter { animation: fadeIn 0.2s ease-out; }
+        .modal-content-enter { animation: scaleIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        #video-grid video { pointer-events: none; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col antialiased">
+
+    <main class="flex-1 overflow-y-auto p-5">
+        <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5"></div>
+        <div id="placeholder" class="h-full flex flex-col items-center justify-center text-gray-500 text-center">
+            <div id="loader" class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400"></div>
+            <h2 class="text-xl font-medium mt-4 text-gray-400">Loading Videos...</h2>
+        </div>
+    </main>
+
+    <div id="video-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 glass-backdrop modal-enter">
+        <div id="modal-content" class="bg-black/80 rounded-2xl shadow-2xl w-full max-w-4xl m-4 relative modal-content-enter">
+            <video id="modal-video" class="w-full h-auto max-h-[85vh] rounded-2xl" controls autoplay></video>
+            <button id="close-modal" class="absolute -top-3 -right-3 bg-gray-700/80 hover:bg-gray-600/80 text-white rounded-full p-1.5 transition-colors z-10 glass-backdrop">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const videoGrid = document.getElementById('video-grid');
+        const placeholder = document.getElementById('placeholder');
+        const videoModal = document.getElementById('video-modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalVideo = document.getElementById('modal-video');
+        const closeModalBtn = document.getElementById('close-modal');
+
+        async function loadVideos() {
+            videoGrid.innerHTML = '';
+            placeholder.classList.remove('hidden');
+            const videoFiles = await window.electronAPI.getVideos();
+
+            if (videoFiles.error) {
+                placeholder.innerHTML = `<i data-lucide="alert-triangle" class="w-20 h-20 mb-4 text-yellow-500"></i><h2 class="text-xl font-semibold mb-2">Error</h2><p class="max-w-md text-gray-400">${videoFiles.error}</p>`;
+                lucide.createIcons();
+                return;
+            }
+
+            if (videoFiles.length > 0) {
+                placeholder.classList.add('hidden');
+                videoFiles.forEach(file => createVideoThumbnail(file));
+            } else {
+                placeholder.innerHTML = `<i data-lucide="video-off" class="w-20 h-20 mb-4"></i><h2 class="text-xl font-semibold mb-2">No Videos Found</h2><p class="text-gray-400">The CapCut cache folder is empty.</p>`;
+                lucide.createIcons();
+            }
+        }
+
+        function createVideoThumbnail(file) {
+            const thumbWrapper = document.createElement('div');
+            thumbWrapper.className = 'group relative rounded-lg overflow-hidden cursor-pointer shadow-md bg-gray-800 aspect-video transition-transform hover:scale-105 active:scale-95';
+            
+            const videoElement = document.createElement('video');
+            videoElement.src = file.path;
+            videoElement.muted = true;
+            videoElement.preload = 'metadata';
+            videoElement.className = 'w-full h-full object-cover';
+            
+            const infoWrapper = document.createElement('div');
+            infoWrapper.className = 'absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity';
+            
+            const fileName = document.createElement('p');
+            fileName.className = 'text-white text-xs font-medium truncate';
+            fileName.textContent = file.name;
+            infoWrapper.appendChild(fileName);
+            
+            thumbWrapper.appendChild(videoElement);
+            thumbWrapper.appendChild(infoWrapper);
+            videoGrid.appendChild(thumbWrapper);
+            
+            thumbWrapper.addEventListener('click', () => openModal(file.path));
+        }
+
+        function openModal(videoPath) {
+            modalVideo.src = videoPath;
+            videoModal.classList.remove('hidden');
+            videoModal.classList.add('flex');
+            modalVideo.play();
+        }
+
+        function closeModal() {
+            videoModal.classList.add('hidden');
+            videoModal.classList.remove('flex');
+            modalVideo.pause();
+            modalVideo.src = '';
+        }
+
+        closeModalBtn.addEventListener('click', closeModal);
+        videoModal.addEventListener('click', (e) => e.target === videoModal && closeModal());
+        document.addEventListener('keydown', (e) => e.key === 'Escape' && !videoModal.classList.contains('hidden') && closeModal());
+    // Refresh button event listener removed
+        document.addEventListener('DOMContentLoaded', () => {
+             lucide.createIcons();
+             loadVideos();
+        });
+    </script>
+</body>
+</html>
