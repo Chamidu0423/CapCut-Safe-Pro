@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CapCut MotionBlurCache Gallery</title>
+    <title>Capcut CacheFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -13,119 +13,441 @@
             color: #f2f2f7;
             overflow: hidden;
         }
-
+        body {
+            background-image: linear-gradient(rgba(28,28,30,0.55), rgba(28,28,30,0.55)), url('src/img/Erica Anderson (2).gif');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-color: #1c1c1e;
+        }
         ::-webkit-scrollbar { width: 9px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
-
-        .glass-backdrop {
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            backdrop-filter: blur(20px) saturate(180%);
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+        .glass {
+            background: rgba(30, 30, 34, 0.65);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.08);
         }
-        
         .modal-enter { animation: fadeIn 0.2s ease-out; }
         .modal-content-enter { animation: scaleIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
         #video-grid video { pointer-events: none; }
+        .sidebar-icon { transition: background 0.2s; }
+        .sidebar-icon.active, .sidebar-icon:hover { background: rgba(255,255,255,0.08); }
+    #nav-settings { margin-bottom: 1rem; }
+        .search-bar {
+            background: rgba(255,255,255,0.08);
+            border-radius: 1rem;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            color: #f2f2f7;
+            font-size: 1rem;
+            outline: none;
+            width: 100%;
+        }
+        .glassy-select {
+            background: rgba(255,255,255,0.03);
+            -webkit-backdrop-filter: blur(12px) saturate(160%);
+            backdrop-filter: blur(12px) saturate(160%);
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 0.5rem 0.75rem;
+            color: #f2f2f7;
+            font-size: 0.95rem;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 1rem;
+            border-radius: 0.5rem;
+        }
+        .glassy-select:focus {
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45), 0 0 0 4px rgba(99,102,241,0.08);
+            border-color: rgba(99,102,241,0.45);
+        }
+        .glassy-select option {
+            background: rgba(20,20,24,0.9);
+            color: #f2f2f7;
+        }
+        #sort-options {
+            overflow: hidden;
+        }
+        #sort-options li {
+            transition: background-color 180ms ease, box-shadow 180ms ease, padding-left 160ms ease;
+            border-radius: 0.375rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        #sort-options li:hover {
+            background: linear-gradient(90deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+            padding-left: 1.4rem;
+            box-shadow: inset 0 4px 18px rgba(255,255,255,0.018);
+        }
+        #sort-options li:active {
+            transform: scale(0.995);
+        }
+        #sort-options li:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.06);
+        }
     </style>
-</head>
-<body class="h-screen w-screen flex flex-col antialiased">
-
-    <main class="flex-1 overflow-y-auto p-5">
-        <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5"></div>
-        <div id="placeholder" class="h-full flex flex-col items-center justify-center text-gray-500 text-center">
-            <div id="loader" class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400"></div>
-            <h2 class="text-xl font-medium mt-4 text-gray-400">Loading Videos...</h2>
+    </head>
+    <body class="h-screen w-screen flex antialiased">
+    <div class="flex h-screen w-screen">
+    <aside class="glass h-full w-64 flex flex-col justify-between py-0 px-4 shadow-xl">
+            <div>
+        <div class="flex items-center gap-3 mb-2">
+                        <img src="src/img/banner.png" height="100%" width="100%" alt="App Logo" class="w-28 h-28 rounded-2xl shadow-lg object-contain" />
+                </div>
+                <nav class="flex flex-col gap-2">
+                    <button class="sidebar-icon flex items-center gap-3 px-4 py-2 rounded-xl active" id="nav-home"><i data-lucide="home" class="w-6 h-6"></i> <span>Home</span></button>
+                    <button class="sidebar-icon flex items-center gap-3 px-4 py-2 rounded-xl" id="nav-video"><i data-lucide="film" class="w-6 h-6"></i> <span>Video library</span></button>
+                </nav>
+            </div>
+            <div>
+                <button class="sidebar-icon flex items-center gap-3 px-4 py-2 rounded-xl w-full" id="nav-settings"><i data-lucide="settings" class="w-6 h-6"></i> <span>Settings</span></button>
+            </div>
+        </aside>
+        <div class="flex-1 flex flex-col h-full">
+            <header class="glass flex items-center justify-between px-8 py-6 shadow-lg">
+                <div class="w-96">
+                    <input type="text" class="search-bar" placeholder="Search" id="search-input" />
+                </div>
+                <button id="refresh-btn" class="glass px-4 py-2 rounded-xl text-white font-semibold flex items-center gap-2"><i data-lucide="refresh-cw" class="w-5 h-5"></i> Refresh</button>
+            </header>
+            <main id="main-scroll" class="flex-1 overflow-y-auto p-8">
+                <div id="video-library-header" class="flex items-center justify-between mb-6">
+                    <h2 id="video-library-title" class="text-xl font-semibold text-white">Recent media</h2>
+                    <div id="sort-container" class="hidden">
+                        <label for="sort-select" class="text-white mr-2">Sort by:</label>
+                        <div class="relative">
+                            <button id="sort-button" class="glassy-select flex items-center justify-between w-40" aria-haspopup="listbox" aria-expanded="false">Name <i data-lucide="chevron-down" class="w-4 h-4 ml-2"></i></button>
+                            <ul id="sort-options" class="hidden absolute right-0 mt-2 w-40 glass z-40 py-2 rounded-lg" role="listbox" aria-labelledby="sort-button" style="background: rgba(30,30,34,0.85); -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%); border: 1px solid rgba(255,255,255,0.06);">
+                                <li class="px-4 py-2 cursor-pointer hover:bg-white/6 text-white" data-value="name" role="option">Name</li>
+                                <li class="px-4 py-2 cursor-pointer hover:bg-white/6 text-white" data-value="date" role="option">Date</li>
+                                <li class="px-4 py-2 cursor-pointer hover:bg-white/6 text-white" data-value="size" role="option">Size</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div id="video-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-7"></div>
+                <div id="placeholder" class="h-full flex flex-col items-center justify-center text-gray-500 text-center mt-20">
+                    <div id="loader" class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400"></div>
+                    <h2 class="text-xl font-medium mt-4 text-gray-400">Loading Videos...</h2>
+                </div>
+            </main>
         </div>
-    </main>
-
-    <div id="video-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 glass-backdrop modal-enter">
-        <div id="modal-content" class="bg-black/80 rounded-2xl shadow-2xl w-full max-w-4xl m-4 relative modal-content-enter">
-            <video id="modal-video" class="w-full h-auto max-h-[85vh] rounded-2xl" controls autoplay></video>
-            <button id="close-modal" class="absolute -top-3 -right-3 bg-gray-700/80 hover:bg-gray-600/80 text-white rounded-full p-1.5 transition-colors z-10 glass-backdrop">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
+        <div id="video-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-2xl transition-all duration-300">
+            <div id="modal-content" class="w-full h-full flex flex-col items-center justify-center relative">
+                <video id="modal-video" class="w-full h-full object-contain bg-black transition-all duration-300" autoplay></video>
+                <div id="custom-controls" class="absolute bottom-0 left-0 right-0 flex flex-col items-center p-6 gap-3 z-20" style="backdrop-filter: blur(32px) saturate(180%); background: linear-gradient(90deg, rgba(40,40,48,0.85) 0%, rgba(30,30,34,0.85) 100%); box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25); border-radius: 2rem 2rem 0 0;">
+                    <div class="flex items-center justify-between w-full gap-4">
+                        <button id="play-pause" class="glass px-5 py-4 rounded-full text-white flex items-center justify-center shadow-lg hover:bg-white/10 transition"><i data-lucide="play" class="w-7 h-7"></i></button>
+                        <input id="seek-bar" type="range" min="0" max="100" value="0" class="w-full mx-4 h-2 rounded-full bg-gradient-to-r from-blue-400/30 to-purple-400/30 accent-blue-400 shadow-inner" />
+                        <span id="current-time" class="text-base text-white font-mono drop-shadow">0:00</span> <span class="text-base text-white font-mono opacity-60">/</span> <span id="duration" class="text-base text-white font-mono drop-shadow">0:00</span>
+                        <button id="mute" class="glass px-4 py-4 rounded-full text-white flex items-center justify-center shadow-lg hover:bg-white/10 transition"><i data-lucide="volume-2" class="w-7 h-7"></i></button>
+                        <button id="fullscreen" class="glass px-4 py-4 rounded-full text-white flex items-center justify-center shadow-lg hover:bg-white/10 transition"><i data-lucide="maximize" class="w-7 h-7"></i></button>
+                        <button id="save-video" class="glass px-5 py-4 rounded-full text-white flex items-center gap-2 font-semibold shadow-lg hover:bg-blue-500/80 transition"><i data-lucide="download" class="w-7 h-7"></i> <span class="hidden sm:inline">Save</span></button>
+                    </div>
+                </div>
+                <button id="close-modal" class="absolute top-8 right-8 bg-gray-900/80 hover:bg-gray-700/80 text-white rounded-full p-3 transition-colors z-30 shadow-xl border border-white/10">
+                    <i data-lucide="x" class="w-7 h-7"></i>
+                </button>
+            </div>
         </div>
     </div>
-
     <script>
+        lucide.createIcons();
         const videoGrid = document.getElementById('video-grid');
         const placeholder = document.getElementById('placeholder');
         const videoModal = document.getElementById('video-modal');
         const modalContent = document.getElementById('modal-content');
         const modalVideo = document.getElementById('modal-video');
         const closeModalBtn = document.getElementById('close-modal');
+        const navHome = document.getElementById('nav-home');
+        const navVideo = document.getElementById('nav-video');
+        let allVideos = [];
 
-        async function loadVideos() {
-            videoGrid.innerHTML = '';
+        function getRecentVideos() {
+            const recent = JSON.parse(localStorage.getItem('recentVideos') || '[]');
+            return recent.map(path => allVideos.find(v => v.path === path)).filter(Boolean);
+        }
+
+        function setRecentVideo(path) {
+            let recent = JSON.parse(localStorage.getItem('recentVideos') || '[]');
+            recent = recent.filter(p => p !== path);
+            recent.unshift(path);
+            if (recent.length > 30) recent = recent.slice(0, 30);
+            localStorage.setItem('recentVideos', JSON.stringify(recent));
+        }
+
+        async function loadAllVideos() {
             placeholder.classList.remove('hidden');
             const videoFiles = await window.electronAPI.getVideos();
-
             if (videoFiles.error) {
                 placeholder.innerHTML = `<i data-lucide="alert-triangle" class="w-20 h-20 mb-4 text-yellow-500"></i><h2 class="text-xl font-semibold mb-2">Error</h2><p class="max-w-md text-gray-400">${videoFiles.error}</p>`;
                 lucide.createIcons();
+                allVideos = [];
+                return [];
+            }
+            allVideos = videoFiles;
+            return videoFiles;
+        }
+
+        function renderVideos(videos) {
+            videoGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-7';
+            videoGrid.innerHTML = '';
+            if (!videos || videos.length === 0) {
+                placeholder.classList.remove('hidden');
+                placeholder.innerHTML = `<i data-lucide="video-off" class="w-20 h-20 mb-4"></i><h2 class="text-xl font-semibold mb-2">No Videos Found</h2><p class="text-gray-400">No videos to display.</p>`;
+                lucide.createIcons();
                 return;
             }
-
-            if (videoFiles.length > 0) {
-                placeholder.classList.add('hidden');
-                videoFiles.forEach(file => createVideoThumbnail(file));
-            } else {
-                placeholder.innerHTML = `<i data-lucide="video-off" class="w-20 h-20 mb-4"></i><h2 class="text-xl font-semibold mb-2">No Videos Found</h2><p class="text-gray-400">The CapCut cache folder is empty.</p>`;
-                lucide.createIcons();
-            }
+            placeholder.classList.add('hidden');
+            videos.forEach(file => createVideoThumbnail(file));
         }
 
         function createVideoThumbnail(file) {
             const thumbWrapper = document.createElement('div');
-            thumbWrapper.className = 'group relative rounded-lg overflow-hidden cursor-pointer shadow-md bg-gray-800 aspect-video transition-transform hover:scale-105 active:scale-95';
-            
+            thumbWrapper.className = 'group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg glass aspect-video transition-transform hover:scale-105 active:scale-95 border border-white/10';
             const videoElement = document.createElement('video');
             videoElement.src = file.path;
             videoElement.muted = true;
             videoElement.preload = 'metadata';
             videoElement.className = 'w-full h-full object-cover';
-            
             const infoWrapper = document.createElement('div');
-            infoWrapper.className = 'absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity';
-            
+            infoWrapper.className = 'absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity';
             const fileName = document.createElement('p');
             fileName.className = 'text-white text-xs font-medium truncate';
             fileName.textContent = file.name;
             infoWrapper.appendChild(fileName);
-            
             thumbWrapper.appendChild(videoElement);
             thumbWrapper.appendChild(infoWrapper);
+            thumbWrapper.addEventListener('click', async () => {
+                modalVideo.src = file.path;
+                modalVideo.removeAttribute('controls');
+                videoModal.classList.remove('hidden');
+                setRecentVideo(file.path);
+                setupCustomControls(file);
+                await modalContent.requestFullscreen();
+            });
             videoGrid.appendChild(thumbWrapper);
-            
-            thumbWrapper.addEventListener('click', () => openModal(file.path));
-        }
-
-        function openModal(videoPath) {
-            modalVideo.src = videoPath;
-            videoModal.classList.remove('hidden');
-            videoModal.classList.add('flex');
-            modalVideo.play();
         }
 
         function closeModal() {
             videoModal.classList.add('hidden');
-            videoModal.classList.remove('flex');
             modalVideo.pause();
             modalVideo.src = '';
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
         }
 
+        function setupCustomControls(file) {
+            const playPauseBtn = document.getElementById('play-pause');
+            const seekBar = document.getElementById('seek-bar');
+            const muteBtn = document.getElementById('mute');
+            const fullscreenBtn = document.getElementById('fullscreen');
+            const saveBtn = document.getElementById('save-video');
+            const currentTimeSpan = document.getElementById('current-time');
+            const durationSpan = document.getElementById('duration');
+            playPauseBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5"></i>';
+            muteBtn.innerHTML = '<i data-lucide="volume-2" class="w-5 h-5"></i>';
+            fullscreenBtn.innerHTML = '<i data-lucide="maximize" class="w-5 h-5"></i>';
+            lucide.createIcons();
+
+            playPauseBtn.onclick = () => {
+                if (modalVideo.paused) {
+                    modalVideo.play();
+                } else {
+                    modalVideo.pause();
+                }
+            };
+            modalVideo.onplay = () => {
+                playPauseBtn.innerHTML = '<i data-lucide="pause" class="w-5 h-5"></i>';
+                lucide.createIcons();
+            };
+            modalVideo.onpause = () => {
+                playPauseBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5"></i>';
+                lucide.createIcons();
+            };
+
+            modalVideo.ontimeupdate = () => {
+                seekBar.value = (modalVideo.currentTime / modalVideo.duration) * 100 || 0;
+                currentTimeSpan.textContent = formatTime(modalVideo.currentTime);
+            };
+            modalVideo.onloadedmetadata = () => {
+                durationSpan.textContent = formatTime(modalVideo.duration);
+            };
+            seekBar.oninput = () => {
+                modalVideo.currentTime = (seekBar.value / 100) * modalVideo.duration;
+            };
+
+            muteBtn.onclick = () => {
+                modalVideo.muted = !modalVideo.muted;
+                muteBtn.innerHTML = modalVideo.muted ? '<i data-lucide="volume-x" class="w-5 h-5"></i>' : '<i data-lucide="volume-2" class="w-5 h-5"></i>';
+                lucide.createIcons();
+            };
+
+            fullscreenBtn.onclick = () => {
+                if (!document.fullscreenElement) {
+                    modalContent.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            };
+
+            saveBtn.onclick = async () => {
+                if (!(window.electronAPI && window.electronAPI.saveFile)) {
+                    const a = document.createElement('a');
+                    a.href = file.path;
+                    a.download = file.name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    return;
+                }
+                const res = await window.electronAPI.saveFile(file.path, file.name);
+                if (res && res.success && res.savedPath) {
+                    let saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
+                    saved = saved.filter(s => s.path !== res.savedPath && s.path !== file.path && s.name !== file.name);
+                    saved.unshift({ name: file.name, path: res.savedPath, savedAt: Date.now() });
+                    if (saved.length > 100) saved = saved.slice(0, 100);
+                    localStorage.setItem('savedVideos', JSON.stringify(saved));
+                }
+            };
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
         closeModalBtn.addEventListener('click', closeModal);
-        videoModal.addEventListener('click', (e) => e.target === videoModal && closeModal());
-        document.addEventListener('keydown', (e) => e.key === 'Escape' && !videoModal.classList.contains('hidden') && closeModal());
-    // Refresh button event listener removed
-        document.addEventListener('DOMContentLoaded', () => {
-             lucide.createIcons();
-             loadVideos();
+        videoModal.addEventListener('click', (e) => {
+            if (e.target === videoModal) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !videoModal.classList.contains('hidden')) closeModal();
+        });
+
+        const videoLibraryTitle = document.getElementById('video-library-title');
+    const sortContainer = document.getElementById('sort-container');
+    const sortButton = document.getElementById('sort-button');
+    const sortOptions = document.getElementById('sort-options');
+    let sortValue = 'name';
+
+        navHome.addEventListener('click', async () => {
+            navHome.classList.add('active');
+            navVideo.classList.remove('active');
+            videoLibraryTitle.textContent = 'Recent media';
+            sortContainer.classList.add('hidden');
+            if (allVideos.length === 0) await loadAllVideos();
+            renderVideos(getRecentVideos());
+        });
+
+        navVideo.addEventListener('click', async () => {
+            navVideo.classList.add('active');
+            navHome.classList.remove('active');
+            videoLibraryTitle.textContent = 'Video library';
+            sortContainer.classList.remove('hidden');
+            if (allVideos.length === 0) await loadAllVideos();
+            renderVideos(sortVideos(allVideos, sortValue));
+        });
+
+        sortButton.addEventListener('click', (e) => {
+            const expanded = sortButton.getAttribute('aria-expanded') === 'true';
+            sortButton.setAttribute('aria-expanded', String(!expanded));
+            sortOptions.classList.toggle('hidden');
+        });
+
+        sortOptions.addEventListener('click', (e) => {
+            const li = e.target.closest('li');
+            if (!li) return;
+            sortValue = li.getAttribute('data-value');
+            sortButton.firstChild.textContent = li.textContent.trim();
+            sortOptions.classList.add('hidden');
+            sortButton.setAttribute('aria-expanded', 'false');
+            renderVideos(sortVideos(allVideos, sortValue));
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!sortContainer.contains(e.target)) {
+                sortOptions.classList.add('hidden');
+                sortButton.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        const refreshBtn = document.getElementById('refresh-btn');
+        refreshBtn.addEventListener('click', async () => {
+            const icon = refreshBtn.querySelector('svg');
+            if (icon) icon.style.transform = 'rotate(0deg)';
+            await loadAllVideos();
+            if (navVideo.classList.contains('active')) {
+                renderVideos(sortVideos(allVideos, sortValue));
+            } else {
+                renderVideos(getRecentVideos());
+            }
+            if (icon) {
+                icon.style.transition = 'transform 400ms linear';
+                icon.style.transform = 'rotate(360deg)';
+                setTimeout(() => { icon.style.transform = ''; }, 500);
+            }
+        });
+
+        const searchInput = document.getElementById('search-input');
+        let searchTimer = null;
+
+        async function doSearch(query) {
+            const q = (query || '').trim().toLowerCase();
+            if (!q) {
+                if (navVideo.classList.contains('active')) {
+                    renderVideos(sortVideos(allVideos, sortValue));
+                } else {
+                    renderVideos(getRecentVideos());
+                }
+                return;
+            }
+
+            if (navVideo.classList.contains('active') && allVideos.length === 0) {
+                await loadAllVideos();
+            }
+
+            if (navVideo.classList.contains('active')) {
+                const filtered = (allVideos || []).filter(v => (v.name || '').toLowerCase().includes(q));
+                renderVideos(sortVideos(filtered, sortValue));
+            } else {
+                const recent = getRecentVideos();
+                const filtered = (recent || []).filter(v => (v.name || '').toLowerCase().includes(q));
+                renderVideos(filtered);
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            const q = e.target.value;
+            if (searchTimer) clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => { doSearch(q); }, 220);
+        });
+
+        function sortVideos(videos, sortBy) {
+            if (!videos) return [];
+            let sorted = [...videos];
+            if (sortBy === 'name') {
+                sorted.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortBy === 'date') {
+                sorted.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+            } else if (sortBy === 'size') {
+                sorted.sort((a, b) => (b.size || 0) - (a.size || 0));
+            }
+            return sorted;
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadAllVideos();
+            renderVideos(getRecentVideos());
         });
     </script>
-</body>
-</html>
+    </body>
+    </html>
