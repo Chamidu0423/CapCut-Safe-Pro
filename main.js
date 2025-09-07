@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const os = require('os');
@@ -19,6 +19,7 @@ function createWindow() {
     width: 1200,
     height: 800,
     autoHideMenuBar: true,
+    icon: path.join(__dirname, 'src', 'img', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -44,6 +45,31 @@ ipcMain.handle('get-videos', async () => {
   } catch (error) {
     console.error('Error reading video directory:', error);
     return { error: `Could not read directory: ${TARGET_DIR}. It might not exist or there is a permission issue.` };
+  }
+});
+
+ipcMain.handle('show-in-folder', async (event, filePath) => {
+  try {
+  shell.showItemInFolder(filePath);
+  return { success: true };
+  } catch (err) {
+    console.error('show-in-folder error:', err);
+    return { success: false, error: String(err) };
+  }
+});
+
+ipcMain.handle('save-file', async (event, srcPath, defaultName) => {
+  try {
+    const win = BrowserWindow.getFocusedWindow();
+    const { canceled, filePath } = await dialog.showSaveDialog(win, {
+      defaultPath: defaultName
+    });
+    if (canceled || !filePath) return { success: false, canceled: true };
+    await fs.copyFile(srcPath, filePath);
+    return { success: true, savedPath: filePath };
+  } catch (err) {
+    console.error('save-file error:', err);
+    return { success: false, error: String(err) };
   }
 });
 
