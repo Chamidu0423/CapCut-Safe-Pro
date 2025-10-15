@@ -40,7 +40,7 @@
     #nav-settings { margin-bottom: 1rem; }
         .search-bar {
             background: rgba(255,255,255,0.08);
-            border-radius: 1rem;
+            border-radius: 2rem;
             border: none;
             padding: 0.75rem 1.25rem;
             color: #f2f2f7;
@@ -95,7 +95,7 @@
     </head>
     <body class="h-screen w-screen flex antialiased">
     <div class="flex h-screen w-screen">
-    <aside class="glass h-full w-64 flex flex-col justify-between py-0 px-4 shadow-xl">
+    <aside class="glass h-full w-64 flex flex-col justify-between py-0 px-4 shadow-xl relative">
             <div>
         <div class="flex items-center gap-3 mb-2">
                         <img src="src/img/banner.png" height="100%" width="100%" alt="App Logo" class="w-28 h-28 rounded-2xl shadow-lg object-contain" />
@@ -103,6 +103,7 @@
                 <nav class="flex flex-col gap-2">
                     <button class="sidebar-icon flex items-center gap-3 px-4 py-2 rounded-xl active" id="nav-home"><i data-lucide="home" class="w-6 h-6"></i> <span>Home</span></button>
                     <button class="sidebar-icon flex items-center gap-3 px-4 py-2 rounded-xl" id="nav-video"><i data-lucide="film" class="w-6 h-6"></i> <span>Video library</span></button>
+                    <button class="sidebar-icon flex items-center gap-3 px-4 py-2 rounded-xl" id="nav-guide"><i data-lucide="book" class="w-6 h-6"></i> <span>Guide</span></button>
                 </nav>
             </div>
             <div>
@@ -112,13 +113,13 @@
         <div class="flex-1 flex flex-col h-full">
             <header class="glass flex items-center justify-between px-8 py-6 shadow-lg">
                 <div class="w-96">
-                    <input type="text" class="search-bar" placeholder="Search" id="search-input" />
+                    <input type="text" class="search-bar" placeholder="Search..." id="search-input" />
                 </div>
                 <button id="refresh-btn" class="glass px-4 py-2 rounded-xl text-white font-semibold flex items-center gap-2"><i data-lucide="refresh-cw" class="w-5 h-5"></i> Refresh</button>
             </header>
             <main id="main-scroll" class="flex-1 overflow-y-auto p-8">
                 <div id="video-library-header" class="flex items-center justify-between mb-6">
-                    <h2 id="video-library-title" class="text-xl font-semibold text-white">Recent media</h2>
+                    <h2 id="video-library-title" class="text-2xl font-semibold text-white">Recent media</h2>
                     <div id="sort-container" class="hidden">
                         <label for="sort-select" class="text-white mr-2">Sort by:</label>
                         <div class="relative">
@@ -156,6 +157,7 @@
                 </button>
             </div>
         </div>
+    <!-- about modal removed; settings will render in the main area -->
     </div>
     <script>
         lucide.createIcons();
@@ -164,9 +166,12 @@
         const videoModal = document.getElementById('video-modal');
         const modalContent = document.getElementById('modal-content');
         const modalVideo = document.getElementById('modal-video');
-        const closeModalBtn = document.getElementById('close-modal');
-        const navHome = document.getElementById('nav-home');
-        const navVideo = document.getElementById('nav-video');
+    const closeModalBtn = document.getElementById('close-modal');
+    const navSettings = document.getElementById('nav-settings');
+    const navHome = document.getElementById('nav-home');
+    const navVideo = document.getElementById('nav-video');
+    const navGuide = document.getElementById('nav-guide');
+    const refreshBtn = document.getElementById('refresh-btn');
         let allVideos = [];
 
         function getRecentVideos() {
@@ -200,7 +205,7 @@
             videoGrid.innerHTML = '';
             if (!videos || videos.length === 0) {
                 placeholder.classList.remove('hidden');
-                placeholder.innerHTML = `<i data-lucide="video-off" class="w-20 h-20 mb-4"></i><h2 class="text-xl font-semibold mb-2">No Videos Found</h2><p class="text-gray-400">No videos to display.</p>`;
+                placeholder.innerHTML = `<i data-lucide="video-off" class="w-20 h-20 mb-4"></i><h2 class="text-xl font-semibold mb-2">No Videos Found</h2>`;
                 lucide.createIcons();
                 return;
             }
@@ -299,16 +304,8 @@
             };
 
             saveBtn.onclick = async () => {
-                if (!(window.electronAPI && window.electronAPI.saveFile)) {
-                    const a = document.createElement('a');
-                    a.href = file.path;
-                    a.download = file.name;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    return;
-                }
-                const res = await window.electronAPI.saveFile(file.path, file.name);
+                const defaultPath = localStorage.getItem('defaultDownloadPath');
+                const res = await window.electronAPI.saveFile(file.path, file.name, defaultPath);
                 if (res && res.success && res.savedPath) {
                     let saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
                     saved = saved.filter(s => s.path !== res.savedPath && s.path !== file.path && s.name !== file.name);
@@ -326,6 +323,120 @@
             return `${m}:${s.toString().padStart(2, '0')}`;
         }
         closeModalBtn.addEventListener('click', closeModal);
+        // Render settings screen when Settings is clicked
+        navSettings.addEventListener('click', async () => {
+            navSettings.classList.add('active');
+            navHome.classList.remove('active');
+            navVideo.classList.remove('active');
+            navGuide.classList.remove('active');
+            if (refreshBtn) refreshBtn.style.display = 'none';
+            searchInput.style.display = 'none';
+            renderSettings();
+        });
+
+        function renderSettings() {
+            const title = document.getElementById('video-library-title');
+            const sortContainer = document.getElementById('sort-container');
+            title.textContent = 'Settings';
+            sortContainer.classList.add('hidden');
+            placeholder.classList.add('hidden');
+            videoGrid.className = 'flex flex-col gap-6';
+            videoGrid.innerHTML = '';
+
+            const card = document.createElement('div');
+            card.className = 'glass rounded-2xl p-8 shadow-lg w-full';
+
+            const h = document.createElement('h3');
+            h.className = 'text-xl font-semibold mb-6 text-white';
+            h.textContent = 'Recommended Settings';
+            card.appendChild(h);
+
+            // Default download path setting
+            const downloadPathLabel = document.createElement('label');
+            downloadPathLabel.className = 'block text-gray-300 mb-2 font-medium';
+            downloadPathLabel.textContent = 'Default download path:';
+            card.appendChild(downloadPathLabel);
+
+            const downloadPathContainer = document.createElement('div');
+            downloadPathContainer.className = 'flex gap-2 mb-4';
+
+            const downloadPathInput = document.createElement('input');
+            downloadPathInput.type = 'text';
+            downloadPathInput.className = 'flex-1 glassy-select';
+            downloadPathInput.placeholder = 'Choose a folder for downloads';
+            downloadPathInput.readOnly = true;
+            downloadPathInput.value = localStorage.getItem('defaultDownloadPath') || '';
+            downloadPathContainer.appendChild(downloadPathInput);
+
+            const browseBtn = document.createElement('button');
+            browseBtn.className = 'glass px-3 py-2 rounded-xl text-white font-semibold hover:bg-white/10 transition';
+            browseBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9l-.81-1.2a2 2 0 0 0-1.67-.9H8a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z"/><path d="M2 8v11a2 2 0 0 0 2 2h14"/></svg>';
+            browseBtn.title = 'Browse for folder';
+            browseBtn.onclick = async () => {
+                try {
+                    const folderPath = await window.electronAPI.selectFolder();
+                    if (folderPath) {
+                        downloadPathInput.value = folderPath;
+                        localStorage.setItem('defaultDownloadPath', folderPath);
+                    }
+                } catch (error) {
+                    console.error('Error selecting folder:', error);
+                    alert('Error selecting folder: ' + error.message);
+                }
+            };
+            downloadPathContainer.appendChild(browseBtn);
+
+            card.appendChild(downloadPathContainer);
+
+            lucide.createIcons();
+
+            // Auto-refresh toggle
+            const autoRefreshLabel = document.createElement('label');
+            autoRefreshLabel.className = 'block text-gray-300 mb-2 font-medium';
+            autoRefreshLabel.textContent = 'Auto-refresh on startup:';
+            card.appendChild(autoRefreshLabel);
+
+            const autoRefreshContainer = document.createElement('div');
+            autoRefreshContainer.className = 'flex items-center mb-4';
+
+            const toggleWrapper = document.createElement('label');
+            toggleWrapper.className = 'relative inline-flex items-center cursor-pointer';
+            toggleWrapper.htmlFor = 'auto-refresh-toggle';
+
+            const autoRefreshToggle = document.createElement('input');
+            autoRefreshToggle.type = 'checkbox';
+            autoRefreshToggle.id = 'auto-refresh-toggle';
+            autoRefreshToggle.className = 'sr-only peer';
+            autoRefreshToggle.checked = localStorage.getItem('autoRefresh') === 'true';
+
+            const toggleBg = document.createElement('div');
+            toggleBg.className = 'w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[""] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600';
+
+            toggleWrapper.appendChild(autoRefreshToggle);
+            toggleWrapper.appendChild(toggleBg);
+            autoRefreshContainer.appendChild(toggleWrapper);
+
+            const toggleLabel = document.createElement('label');
+            toggleLabel.htmlFor = 'auto-refresh-toggle';
+            toggleLabel.className = 'ml-3 text-gray-200 cursor-pointer';
+            toggleLabel.textContent = 'Enable auto-refresh when opening the app';
+            autoRefreshContainer.appendChild(toggleLabel);
+
+            card.appendChild(autoRefreshContainer);
+
+            // Save Button
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'glass px-6 py-3 rounded-xl text-white font-semibold hover:bg-white/10 transition';
+            saveBtn.textContent = 'Save Settings';
+            saveBtn.onclick = () => {
+                localStorage.setItem('autoRefresh', autoRefreshToggle.checked);
+                localStorage.setItem('defaultDownloadPath', downloadPathInput.value);
+                alert('Settings saved!');
+            };
+            card.appendChild(saveBtn);
+
+            videoGrid.appendChild(card);
+        }
         videoModal.addEventListener('click', (e) => {
             if (e.target === videoModal) closeModal();
         });
@@ -342,6 +453,10 @@
         navHome.addEventListener('click', async () => {
             navHome.classList.add('active');
             navVideo.classList.remove('active');
+            navGuide.classList.remove('active');
+            navSettings.classList.remove('active');
+            if (refreshBtn) refreshBtn.style.display = 'flex';
+            searchInput.style.display = 'block';
             videoLibraryTitle.textContent = 'Recent media';
             sortContainer.classList.add('hidden');
             if (allVideos.length === 0) await loadAllVideos();
@@ -351,10 +466,26 @@
         navVideo.addEventListener('click', async () => {
             navVideo.classList.add('active');
             navHome.classList.remove('active');
+            navGuide.classList.remove('active');
+            navSettings.classList.remove('active');
+            if (refreshBtn) refreshBtn.style.display = 'flex';
+            searchInput.style.display = 'block';
             videoLibraryTitle.textContent = 'Video library';
             sortContainer.classList.remove('hidden');
             if (allVideos.length === 0) await loadAllVideos();
             renderVideos(sortVideos(allVideos, sortValue));
+        });
+
+        navGuide.addEventListener('click', async () => {
+            navGuide.classList.add('active');
+            navHome.classList.remove('active');
+            navVideo.classList.remove('active');
+            navSettings.classList.remove('active');
+            if (refreshBtn) refreshBtn.style.display = 'none';
+            searchInput.style.display = 'none';
+            videoLibraryTitle.textContent = 'Guide';
+            sortContainer.classList.add('hidden');
+            renderGuide();
         });
 
         sortButton.addEventListener('click', (e) => {
@@ -380,8 +511,7 @@
             }
         });
 
-        const refreshBtn = document.getElementById('refresh-btn');
-        refreshBtn.addEventListener('click', async () => {
+    refreshBtn.addEventListener('click', async () => {
             const icon = refreshBtn.querySelector('svg');
             if (icon) icon.style.transform = 'rotate(0deg)';
             await loadAllVideos();
@@ -444,8 +574,41 @@
             return sorted;
         }
 
+        function renderGuide() {
+            placeholder.classList.add('hidden');
+            videoGrid.className = 'flex flex-col gap-6';
+            videoGrid.innerHTML = '';
+            const card = document.createElement('div');
+            card.className = 'glass rounded-2xl p-8 shadow-lg max-w-3xl mx-auto';
+            const title = document.createElement('h3');
+            title.className = 'text-2xl font-semibold mb-3 text-white';
+            title.textContent = 'Using CapCut Safe Pro';
+            const p1 = document.createElement('p');
+            p1.className = 'text-gray-300 mb-2';
+            p1.textContent = '1) Use "Video library" to browse captured videos from the CapCut cache.';
+            const p2 = document.createElement('p');
+            p2.className = 'text-gray-300 mb-2';
+            p2.textContent = '2) Click any thumbnail to open the custom player. Use Save to export a copy to your computer.';
+            const p3 = document.createElement('p');
+            p3.className = 'text-gray-300 mb-2';
+            p3.textContent = '3) "Refresh" scans the cache folder again to discover new items.';
+            const p4 = document.createElement('p');
+            p4.className = 'text-gray-300';
+            p4.textContent = '4) Recent videos appear in Home based on what you opened.';
+            card.appendChild(title);
+            card.appendChild(p1);
+            card.appendChild(p2);
+            card.appendChild(p3);
+            card.appendChild(p4);
+            videoGrid.appendChild(card);
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadAllVideos();
+            const autoRefresh = localStorage.getItem('autoRefresh') === 'true';
+            if (autoRefresh) {
+                await loadAllVideos();
+            }
+            searchInput.style.display = 'block';
             renderVideos(getRecentVideos());
         });
     </script>
