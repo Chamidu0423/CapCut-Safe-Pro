@@ -58,19 +58,34 @@ ipcMain.handle('show-in-folder', async (event, filePath) => {
   }
 });
 
-ipcMain.handle('save-file', async (event, srcPath, defaultName) => {
+ipcMain.handle('save-file', async (event, srcPath, defaultName, defaultPath) => {
   try {
-    const win = BrowserWindow.getFocusedWindow();
-    const { canceled, filePath } = await dialog.showSaveDialog(win, {
-      defaultPath: defaultName
-    });
-    if (canceled || !filePath) return { success: false, canceled: true };
-    await fs.copyFile(srcPath, filePath);
-    return { success: true, savedPath: filePath };
+    if (defaultPath) {
+      const destPath = path.join(defaultPath, defaultName);
+      // Ensure directory exists
+      await fs.mkdir(path.dirname(destPath), { recursive: true });
+      await fs.copyFile(srcPath, destPath);
+      return { success: true, savedPath: destPath };
+    } else {
+      const win = BrowserWindow.getFocusedWindow();
+      const { canceled, filePath } = await dialog.showSaveDialog(win, {
+        defaultPath: defaultName
+      });
+      if (canceled || !filePath) return { success: false, canceled: true };
+      await fs.copyFile(srcPath, filePath);
+      return { success: true, savedPath: filePath };
+    }
   } catch (err) {
     console.error('save-file error:', err);
     return { success: false, error: String(err) };
   }
+});
+
+ipcMain.handle('select-folder', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openDirectory']
+  });
+  return canceled ? null : filePaths[0];
 });
 
 app.whenReady().then(() => {
